@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alışveriş Listesi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #181818;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .kapsayici {
+            display: flex;
+            width: 60%;
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+        .formBolumu, .tabloBolumu {
+            flex: 1;
+            padding: 20px;
+        }
+        .formBolumu {
+            max-width: 300px;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: none;
+        }
+        input {
+            width: 93%;
+        }
+        select, input {
+            background-color: #333;
+            color: white;
+        }
+        button {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:nth-of-type(1) {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button:nth-of-type(2) {
+            background-color: #FF9800;
+            color: white;
+        }
+        table {
+            width: 90%;
+            border-collapse: collapse;
+            background-color: #333;
+            border-radius: 5px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #555;
+        }
+        th {
+            background-color: #444;
+        }
+        .silButton {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .vurgula {
+            background-color: #4CAF50 !important;
+            transition: background-color 3s;
+        }
+        @media (max-width: 768px) {
+            .kapsayici {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="kapsayici">
+        <div class="formBolumu">
+            <label for="kategoriSecimi">Kategori Seçin</label>
+            <select id="kategoriSecimi" onchange="urunleriGuncelle()">
+                <option value="Gida">Gıda</option>
+                <option value="Temizlik">Temizlik</option>
+            </select>
+            <label for="urunSecimi">Ürün Seçin</label>
+            <select id="urunSecimi" onchange="fiyatGuncelle()">
+                <!-- Ürünler buraya dinamik olarak eklenecek -->
+            </select>
+            <label for="miktar">Miktar</label>
+            <input type="number" id="miktar" min="1">
+            <label for="fiyatGirisi">Birim Fiyat (TL)</label>
+            <input type="number" id="fiyatGirisi" step="0.01" oninput="fiyatGuncelleKullanici()">
+            <button onclick="urunEkle()">Ekle</button>
+            <button onclick="listeyiTemizle()">Tümünü Temizle</button>
+        </div>
+        
+        <div class="tabloBolumu">
+            <h2>Alışveriş Listesi</h2>
+            <table id="alisverisTablosu">
+                <thead>
+                    <tr>
+                        <th>Ürün Adı</th>
+                        <th>Miktar</th>
+                        <th>Birim Fiyat (TL)</th>
+                        <th>Toplam Fiyat (TL)</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="listeGovdesi"></tbody>
+            </table>
+            <h3>Toplam Fiyat: <span id="toplamFiyat">0</span> TL</h3>
+        </div>
+    </div>
+    <script>
+        let urunler = {
+            'Gida': [
+                { ad: 'Ekmek', fiyat: 5 },
+                { ad: 'Süt', fiyat: 15 },
+                { ad: "Yumurta", fiyat: 30 },
+                { ad: "Tavuk Göğsü", fiyat: 15 },
+                { ad: "Su", fiyat: 2 }
+            ],
+            'Temizlik': [
+                { ad: "Bulaşık Deterjanı", fiyat: 25 },
+                { ad: "Çamaşır Deterjanı", fiyat: 40 },
+                { ad: "Sabun", fiyat: 5 },
+                { ad: "Sünger", fiyat: 7 },
+                { ad: "Deterjan", fiyat: 10 }
+            ]
+        };
+
+        function urunleriGuncelle() {
+            let kategori = document.getElementById('kategoriSecimi').value;
+            let urunSecimi = document.getElementById('urunSecimi');
+            urunSecimi.innerHTML = '';
+
+            urunler[kategori].forEach(urun => {
+                let option = document.createElement('option');
+                option.value = urun.ad;
+                option.textContent = `${urun.ad} (${urun.fiyat} TL)`;
+                urunSecimi.appendChild(option);
+            });
+
+            fiyatGuncelle();
+        }
+
+        function fiyatGuncelle() {
+            let kategori = document.getElementById('kategoriSecimi').value;
+            let urun = document.getElementById('urunSecimi').value;
+            let fiyatInput = document.getElementById('fiyatGirisi');
+            let seciliUrun = urunler[kategori].find(u => u.ad === urun);
+            if (seciliUrun) {
+                fiyatInput.value = seciliUrun.fiyat;
+            }
+        }
+
+        function fiyatGuncelleKullanici() {
+            let fiyatInput = document.getElementById('fiyatGirisi').value;
+            let urunSecimi = document.getElementById('urunSecimi');
+            urunSecimi.options[urunSecimi.selectedIndex].textContent = 
+                `${urunSecimi.value} (${fiyatInput} TL)`;
+        }
+        function urunSil(button, toplamFiyat) {
+            let satir = button.parentElement.parentElement;
+            satir.remove();
+            document.getElementById('toplamFiyat').textContent = 
+                (parseFloat(document.getElementById('toplamFiyat').textContent) - toplamFiyat).toFixed(2);
+        }
+
+        function urunEkle() {
+            let urun = document.getElementById('urunSecimi').value;
+            let miktar = document.getElementById('miktar').value;
+            let fiyat = document.getElementById('fiyatGirisi').value;
+            if (!urun || miktar <= 0 || fiyat <= 0) {
+                alert('Geçersiz giriş!');
+                return;
+            }
+            let toplamFiyat = miktar * fiyat;
+            let tablo = document.getElementById('listeGovdesi');
+            let satir = document.createElement('tr');
+            satir.innerHTML = `<td>${urun}</td><td>${miktar}</td><td>${fiyat} TL</td><td>${toplamFiyat} TL</td><td><button class='silButton' onclick="urunSil(this, ${toplamFiyat})">Sil</button></td>`;
+            tablo.appendChild(satir);
+            satir.classList.add("vurgula");
+            setTimeout(() => { satir.classList.remove("vurgula"); }, 3000);
+            document.getElementById('toplamFiyat').textContent = (parseFloat(document.getElementById('toplamFiyat').textContent) + toplamFiyat).toFixed(2);
+        }
+
+        function listeyiTemizle() {
+            if (confirm("Tüm listeyi silmek istiyor musunuz?")) {
+                document.getElementById('listeGovdesi').innerHTML = '';
+                document.getElementById('toplamFiyat').textContent = '0';
+            }
+        }
+
+        urunleriGuncelle();
+    </script>
+</body>
+</html>
